@@ -1,18 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 
 export function Editor() {
-  const [content, setContent] = useState(`<h1>Welcome to DocsEditor</h1>
-<p>Start typing your document here. This editor supports rich text formatting with a clean, minimal interface inspired by modern design principles.</p>
-<p></p>
-<h2>Features:</h2>
-<ul>
-<li>Rich text formatting</li>
-<li>Real-time collaboration</li>
-<li>Document management</li>
-<li>Beautiful, minimal design</li>
-</ul>
-<p></p>
-<p>Click anywhere to start editing, and use the toolbar above to format your text.</p>`);
+  const [content, setContent] = useState("");
 
   const editorRef = useRef<HTMLDivElement>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -51,7 +40,6 @@ export function Editor() {
             ref={editorRef}
             contentEditable
             suppressContentEditableWarning
-            dangerouslySetInnerHTML={{ __html: content }}
             className="outline-none prose prose-lg max-w-none"
             style={{
               minHeight: '600px',
