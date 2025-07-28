@@ -1,19 +1,40 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
-  "identifier": "default",
-  "description": "Capability for the main window",
+  "identifier": "main-capability",
+  "description": "Capability for reading and writing files in the app",
   "windows": [
     "main"
   ],
   "permissions": [
-    "core:default",
-    "opener:default",
-    "fs:default",
+    {
+      "identifier": "fs:allow-read",
+      "allow": [
+        {
+          "path": "$APPDATA/*"
+        }
+      ]
+    },
     {
       "identifier": "fs:allow-write",
-      "allow": [{"path": "$APPDATA/*"}]
+      "allow": [
+        {
+          "path": "$APPDATA/*"
+        }
+      ]
     },
-    "fs:write-all",
-    "fs:read-all"
+    {
+      "identifier": "fs:allow-exists",
+      "allow": [
+        {
+          "path": "$APPDATA/*"
+        }
+      ]
+    },
+    {
+      "identifier": "fs:allow-appdata-write",
+      "allow": [{ "path": "$APPDATA/Roaming/com.notes-app.app/*" }]
+    },
+    "fs:default",
+    "core:resources:default"
   ]
 }
