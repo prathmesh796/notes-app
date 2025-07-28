@@ -10,8 +10,8 @@ import {
   Star
 } from "lucide-react";
 import { useState } from "react";
-
-import { create, BaseDirectory } from "@tauri-apps/plugin-fs";
+import useFileContent from "../hooks/file-content";
+import { create, readTextFile, BaseDirectory } from "@tauri-apps/plugin-fs";
 
 interface Document {
   id: string;
@@ -21,32 +21,8 @@ interface Document {
 }
 
 export function DocumentSidebar() {
-  const [documents, setDocuments] = useState<Document[]>([
-    {
-      id: "1",
-      title: "Project Proposal",
-      lastModified: "2 hours ago",
-      starred: true
-    },
-    {
-      id: "2",
-      title: "Meeting Notes",
-      lastModified: "Yesterday",
-      starred: false
-    },
-    {
-      id: "3",
-      title: "Design System",
-      lastModified: "3 days ago",
-      starred: true
-    },
-    {
-      id: "4",
-      title: "User Research",
-      lastModified: "1 week ago",
-      starred: false
-    }
-  ]);
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const { setFileContent } = useFileContent();
 
   const createDoc = async () => {
     // Logic to create a new document
@@ -74,7 +50,15 @@ export function DocumentSidebar() {
     console.log("Create new document");
   };
 
-  
+  const openDoc = async (doc: Document) => {
+    // Logic to open the document
+    const file = await readTextFile(`${doc.title}.md`, {
+      baseDir: BaseDirectory.AppData,
+    });
+
+    setFileContent(file);
+    console.log(`Open document: ${doc.title}`);
+  };
 
   return (
     <div className="w-80 h-full bg-editor-sidebar border-r border-border flex flex-col">
@@ -100,39 +84,42 @@ export function DocumentSidebar() {
       {/* Documents list */}
       <div className="flex-1 overflow-y-auto p-4 space-y-2">
         {documents.map((doc) => (
-          <Card
-            key={doc.id}
-            className="doc-card p-3 cursor-pointer hover:bg-accent/50 transition-colors"
-          >
-            <div className="flex items-start gap-3">
-              <div className="mt-1">
-                <FileText className="w-4 h-4 text-muted-foreground" />
-              </div>
+          <button onClick={() => openDoc(doc)} className="w-full" key={doc.id}>
+            <Card
+              key={doc.id}
+              className="doc-card p-3 cursor-pointer hover:bg-accent/50 transition-colors"
 
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-medium text-sm text-foreground truncate">
-                    {doc.title}
-                  </h3>
-                  <div className="flex items-center gap-1 ml-2">
-                    {doc.starred && (
-                      <Star className="w-3 h-3 text-primary fill-current" />
-                    )}
-                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                      <MoreVertical className="w-3 h-3" />
-                    </Button>
+            >
+              <div className="flex items-start gap-3">
+                <div className="mt-1">
+                  <FileText className="w-4 h-4 text-muted-foreground" />
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-medium text-sm text-foreground truncate">
+                      {doc.title}
+                    </h3>
+                    <div className="flex items-center gap-1 ml-2">
+                      {doc.starred && (
+                        <Star className="w-3 h-3 text-primary fill-current" />
+                      )}
+                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                        <MoreVertical className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1 mt-1">
+                    <Clock className="w-3 h-3 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">
+                      {doc.lastModified}
+                    </span>
                   </div>
                 </div>
-
-                <div className="flex items-center gap-1 mt-1">
-                  <Clock className="w-3 h-3 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">
-                    {doc.lastModified}
-                  </span>
-                </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+          </button>
         ))}
       </div>
 

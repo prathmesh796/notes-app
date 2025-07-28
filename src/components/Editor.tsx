@@ -3,10 +3,11 @@ import React from 'react'
 import { createRoot } from 'react-dom/client'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import useFileContent from "../hooks/file-content";
 
 export function Editor() {
-  const [content, setContent] = useState("");
   const [markdown, setMarkdown] = useState("");
+  const { fileContent, setFileContent } = useFileContent();
 
   const editorRef = useRef<HTMLDivElement>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -16,7 +17,7 @@ export function Editor() {
     if (!editor) return;
 
     const handleInput = () => {
-      setContent(editor.innerHTML);
+      setFileContent(editor.innerHTML);
     };
 
 
@@ -67,7 +68,7 @@ export function Editor() {
               style={{ width: '100%', height: '150px' }}
             />
             <div style={{ marginTop: 16 }}>
-              <Markdown>{markdown}</Markdown>
+              <Markdown>{fileContent}</Markdown>
             </div>
           </div>
 
@@ -83,8 +84,8 @@ export function Editor() {
         <div className="mt-4 flex justify-between text-sm text-muted-foreground">
           <span>Last saved: Just now</span>
           <div className="flex gap-4">
-            <span>Words: {content.replace(/<[^>]*>/g, '').split(/\s+/).filter(Boolean).length}</span>
-            <span>Characters: {content.replace(/<[^>]*>/g, '').length}</span>
+            {/* <span>Words: {content.replace(/<[^>]*>/g, '').split(/\s+/).filter(Boolean).length}</span>
+            <span>Characters: {content.replace(/<[^>]*>/g, '').length}</span> */}
           </div>
         </div>
       </div>
