@@ -1,26 +1,34 @@
-import http from 'http';
-import * as WebSocket from 'ws'; // ✅ Use namespace import
+import * as WebSocket from 'ws';
 
-const server = http.createServer((req, res) => {
-  res.writeHead(200, { 'Content-Type': 'text/plain' });
-  res.end('Hello World\n');
-});
+const WS_SERVER_URL = 'ws://localhost:8080';
 
-const wss = new WebSocket.Server({ server }); // ✅ now works
+const ws = new WebSocket.WebSocket(WS_SERVER_URL);
 
-wss.on('connection', (ws) => {
-  console.log('Client connected');
+ws.onopen = () => {
+  console.log('Connected to WebSocket server');
+  ws.send('Hello from the client!');
+  console.log('Sent message: "Hello from the client!"');
+};
 
-  ws.on('message', (message) => {
-    console.log(`Received message: ${message}`);
-    ws.send(`Server received your message: ${message}`);
-  });
+ws.onmessage = (event) => {
+  console.log(`Received message from server: ${event.data}`);
+};
 
-  ws.on('close', () => {
-    console.log('Client disconnected');
-  });
-});
+ws.onclose = (event) => {
+  if (event.wasClean) {
+    console.log(`Connection closed cleanly, code=${event.code}, reason=${event.reason}`);
+  } else {
+    console.error('Connection died unexpectedly');
+  }
+};
 
-server.listen(8080, () => {
-  console.log('Server listening on port 8080');
-});
+ws.onerror = (error) => {
+  console.error('WebSocket error observed:', error);
+};
+
+setTimeout(() => {
+  if (ws.readyState === ws.OPEN) {
+    ws.close(1000, 'Client initiated close');
+    console.log('Client initiated WebSocket close.');
+  }
+}, 5000);
