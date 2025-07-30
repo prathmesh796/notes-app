@@ -19,9 +19,9 @@ interface Document {
   starred: boolean;
 }
 
-export function DocumentSidebar({ onSelectDocument }: { onSelectDocument: (content: string) => void }) {
- 
+export function DocumentSidebar({ setFileContent }: { setFileContent: (content: string) => void }) {
   const [documents, setDocuments] = useState<Document[]>([]);
+
   const createDoc = async () => {
     // Logic to create a new document
     // This could be a modal or redirect to a new document page
@@ -42,7 +42,7 @@ export function DocumentSidebar({ onSelectDocument }: { onSelectDocument: (conte
         baseDir: BaseDirectory.AppData
       }
     );
-    await file.write(new TextEncoder().encode('Hello world'));
+    await file.write(new TextEncoder().encode('Hello world 2.0'));
     await file.close();
 
     console.log("Create new document");
@@ -52,8 +52,10 @@ export function DocumentSidebar({ onSelectDocument }: { onSelectDocument: (conte
     const file = await readTextFile(`${doc.title}.md`, {
       baseDir: BaseDirectory.AppData,
     });
-    onSelectDocument(file);
-    console.log(`Open document: ${file}`);
+
+    setFileContent(file);
+    console.log(`Open document: ${doc.title}`, file);
+
   };
 
   return (

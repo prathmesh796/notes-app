@@ -2,27 +2,27 @@ import { useState, useRef, useEffect } from "react";
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import Markdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
 
-export function Editor({ content }: { content:string }) {
+export function Editor({ fileContent }: { fileContent: string }) {
   const [markdown, setMarkdown] = useState("");
 
   const editorRef = useRef<HTMLDivElement>(null);
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
+    // Initialize the editor with the file content
+    if (fileContent) {
+      setMarkdown(fileContent);
+    }
+  }, [fileContent]);
+
+  useEffect(() => {
     const editor = editorRef.current;
     if (!editor) return;
 
     const handleInput = () => {
-      // setFileContent(editor.innerHTML);
+      setMarkdown(editor.innerHTML);
     };
-
-    useEffect(() => {
-      console.log("mkd", content);
-      setMarkdown(content);
-    }, [content]);
-  
 
     const handleFocus = () => setIsEditing(true);
     const handleBlur = () => setIsEditing(false);
