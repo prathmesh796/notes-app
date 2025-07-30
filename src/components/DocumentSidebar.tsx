@@ -10,7 +10,6 @@ import {
   Star
 } from "lucide-react";
 import { useState } from "react";
-import useFileContent from "../hooks/file-content";
 import { create, readTextFile, BaseDirectory } from "@tauri-apps/plugin-fs";
 
 interface Document {
@@ -20,10 +19,9 @@ interface Document {
   starred: boolean;
 }
 
-export function DocumentSidebar() {
+export function DocumentSidebar({ onSelectDocument }: { onSelectDocument: (content: string) => void }) {
+ 
   const [documents, setDocuments] = useState<Document[]>([]);
-  const { setFileContent } = useFileContent();
-
   const createDoc = async () => {
     // Logic to create a new document
     // This could be a modal or redirect to a new document page
@@ -51,13 +49,11 @@ export function DocumentSidebar() {
   };
 
   const openDoc = async (doc: Document) => {
-    // Logic to open the document
     const file = await readTextFile(`${doc.title}.md`, {
       baseDir: BaseDirectory.AppData,
     });
-
-    setFileContent(file);
-    console.log(`Open document: ${doc.title}`);
+    onSelectDocument(file);
+    console.log(`Open document: ${file}`);
   };
 
   return (

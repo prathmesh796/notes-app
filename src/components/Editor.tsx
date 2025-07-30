@@ -3,11 +3,9 @@ import React from 'react'
 import { createRoot } from 'react-dom/client'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import useFileContent from "../hooks/file-content";
 
-export function Editor() {
+export function Editor({ content }: { content:string }) {
   const [markdown, setMarkdown] = useState("");
-  const { fileContent, setFileContent } = useFileContent();
 
   const editorRef = useRef<HTMLDivElement>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -17,10 +15,14 @@ export function Editor() {
     if (!editor) return;
 
     const handleInput = () => {
-      setFileContent(editor.innerHTML);
+      // setFileContent(editor.innerHTML);
     };
 
-
+    useEffect(() => {
+      console.log("mkd", content);
+      setMarkdown(content);
+    }, [content]);
+  
 
     const handleFocus = () => setIsEditing(true);
     const handleBlur = () => setIsEditing(false);
@@ -68,7 +70,7 @@ export function Editor() {
               style={{ width: '100%', height: '150px' }}
             />
             <div style={{ marginTop: 16 }}>
-              <Markdown>{fileContent}</Markdown>
+              <Markdown>{markdown}</Markdown>
             </div>
           </div>
 
