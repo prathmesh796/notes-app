@@ -1,91 +1,68 @@
 import { useState, useRef, useEffect } from "react";
 import { useInstance } from "@milkdown/react";
-import { editorViewCtx } from '@milkdown/kit/core'
-import { Transform } from "prosemirror-transform";
-import {MarkdownEditor} from "./MarkdownEditor";
-import { EditorView } from "@milkdown/prose/view";
+import { editorViewCtx } from "@milkdown/kit/core";
+import { collab, collabServiceCtx } from "@milkdown/plugin-collab";
+import { MarkdownEditor } from "./MarkdownEditor";
+import { Doc } from "yjs";
+import { WebsocketProvider } from "y-websocket";
 
 export function Editor() {
-  const [isLoading, getInstance] = useInstance();
-  const editorRef = useRef<HTMLDivElement>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const editor = getInstance();
+  const editorRef = useRef<HTMLDivElement>(null);
 
-  const editDoc = (view: EditorView): void => {
-    let tr = new Transform(view.state.doc);
-  
-    tr.delete(5, 7);
-    tr.split(5);
-  
-    console.log("Modified doc (debug):", tr.doc.toString());
-    console.log("Step count:", tr.steps.length); // → 2
-  
-    view.dispatch(
-        view.state.tr
-            .step(tr.steps[0])
-            .step(tr.steps[1])
-    );
-  };
-  const getUpdates = (view: EditorView) : void => {
-    const origDispatch = view.dispatch
-    
-    view.dispatch = (tr) => {
-    if (!tr.docChanged) return origDispatch(tr)
-    const steps = tr.steps.map(step => step.toJSON())
+  const [isLoading, getInstance] = useInstance();
 
-    console.log(steps[0], steps[0].slice?.content[0]);
-
-    // Send steps to server
-    // sendStepsToServer(steps)
-
-    origDispatch(tr)   
-
-    return () => {
-      view.dispatch = origDispatch;
-    };
-  }
-  }
-// OT’s job:
-// Server tracks a version number (or sequence).
-// Each client sends its step with the version number it was based on.
-// If the server’s current version > client’s version, the server:
-// Transforms the incoming step against all newer steps.
-// Applies the transformed step to the canonical document.
-// Broadcasts the transformed step to all clients.
-// This guarantees:
-// Everyone ends up with the same doc.
-// Steps never fail due to mismatched positions.
-
-  if (!editor){
-    console.log("editor not found")
-  }
-  else
-  {
-    editor.action((ctx) => {
-          const view = ctx.get(editorViewCtx)
-          getUpdates(view);
-        }
-      )
-  }
   useEffect(() => {
-    const editor = editorRef.current;
-    if (!editor) return;
-
-    const handleInput = () => {
-      // setMarkdown(editor.innerHTML);
+    const setupCollab = async () => {
+      console.log("[CLIENT] Waiting for Milkdown editor instance...");
+      const editor = await getInstance();
+  
+      if (!editor) {
+        console.warn("[CLIENT] No editor instance found");
+      }
+      else {
+      console.log("[CLIENT] Editor instance:", editor);
+  
+      const doc = new Doc();
+      const wsProvider = new WebsocketProvider(
+        "ws://localhost:1234",
+        "milkdown-demo",
+        doc
+      );
+      console.log("[CLIENT] Connected to WebSocket:", wsProvider.url);
+      console.log("[CLIENT] Milkdown ready, initializing collab...");
+      editor.action((ctx) => {
+        const collabService = ctx.get(collabServiceCtx);
+        collabService
+          .bindDoc(doc)
+          .setAwareness(wsProvider.awareness)
+          .connect();
+  
+        console.log("[CLIENT] Collab service bound to doc");
+  
+        const view = ctx.get(editorViewCtx);
+        console.log("[CLIENT] EditorView ready:", view);
+      });
+    }
     };
+  
+    setupCollab();
+  }, [getInstance]);
+  
+
+  useEffect(() => {
+    const editorEl = editorRef.current;
+    if (!editorEl) return;
 
     const handleFocus = () => setIsEditing(true);
     const handleBlur = () => setIsEditing(false);
 
-    editor.addEventListener('input', handleInput);
-    editor.addEventListener('focus', handleFocus);
-    editor.addEventListener('blur', handleBlur);
+    editorEl.addEventListener("focusin", handleFocus);
+    editorEl.addEventListener("focusout", handleBlur);
 
     return () => {
-      editor.removeEventListener('input', handleInput);
-      editor.removeEventListener('focus', handleFocus);
-      editor.removeEventListener('blur', handleBlur);
+      editorEl.removeEventListener("focusin", handleFocus);
+      editorEl.removeEventListener("focusout", handleBlur);
     };
   }, []);
 
@@ -93,12 +70,13 @@ export function Editor() {
     <div className="flex-1 flex justify-center p-8 organic-bg">
       <div className="w-full max-w-4xl">
         <div
-          className={`editor-content min-h-[700px] p-12 rounded-xl ${isEditing ? 'ring-2 ring-primary/20' : ''
-            }`}
+          ref={editorRef}
+          tabIndex={0}
+          className={`editor-content min-h-[700px] p-12 rounded-xl ${
+            isEditing ? "ring-2 ring-primary/20" : ""
+          }`}
         >
-          <div>
-            <MarkdownEditor />  
-          </div>
+          <MarkdownEditor />
         </div>
       </div>
     </div>

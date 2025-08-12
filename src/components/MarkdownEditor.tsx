@@ -1,8 +1,7 @@
 import type { FC } from "react";
-
-
 import { Crepe } from "@milkdown/crepe";
 import { Milkdown, useEditor } from "@milkdown/react";
+import { collab } from "@milkdown/plugin-collab";
 
 import "@milkdown/crepe/theme/common/style.css";
 import "@milkdown/crepe/theme/frame.css";
@@ -19,6 +18,7 @@ export const MarkdownEditor: FC = () => {
       root,
       defaultValue: markdown,
     });
+    crepe.editor.use(collab);
     return crepe;
   }, []);
 
