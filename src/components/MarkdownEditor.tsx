@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { Crepe } from "@milkdown/crepe";
 import { Milkdown, useEditor } from "@milkdown/react";
-import { collab,collabServiceCtx  } from "@milkdown/plugin-collab";
+import { collab, collabServiceCtx  } from "@milkdown/plugin-collab";
 import { Doc } from "yjs";
 import { WebsocketProvider } from "y-websocket";
 import "@milkdown/crepe/theme/common/style.css";
@@ -22,15 +22,17 @@ const setupCollab = (crepe : Crepe) => {
   );
   console.log("[CLIENT] Connected to WebSocket:", wsProvider.url);
   console.log("[CLIENT] Milkdown ready, initializing collab...");
-  crepe.editor.action((ctx) => {
-    const collabService = ctx.get(collabServiceCtx);
-    collabService
-      .bindDoc(doc)
-      .setAwareness(wsProvider.awareness)
-      .connect();
+  if(crepe.editor.status == "Created"){
+    crepe.editor.action((ctx) => {
+      const collabService = ctx.get(collabServiceCtx);
+      collabService
+        .bindDoc(doc)
+        .setAwareness(wsProvider.awareness)
+        .connect();
 
-    console.log("[CLIENT] Collab service bound to doc");
-  });
+      console.log("[CLIENT] Collab service bound to doc");
+    });
+  }
 }
 
 export const MarkdownEditor: FC = () => {
