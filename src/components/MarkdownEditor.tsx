@@ -1,36 +1,38 @@
-import type { FC } from "react";
 import { Crepe } from "@milkdown/crepe";
 import { Milkdown, useEditor } from "@milkdown/react";
 import { collab, collabServiceCtx } from "@milkdown/plugin-collab";
-import { Doc, XmlFragment } from "yjs";
+import { Doc } from "yjs";
 import { WebsocketProvider } from "y-websocket";
 import "@milkdown/crepe/theme/common/style.css";
 import "@milkdown/crepe/theme/frame.css";
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 
-export const MarkdownEditor: FC = () => {
+export const MarkdownEditor = ({roomId}:{roomId: string}) => {
   const [crepe, setCrepe] = React.useState<Crepe | null>(null);
-  const doc = new Doc();
-  const wsProvider = new WebsocketProvider(
-    "ws://localhost:1234",
-    "milkdown-demo",
-    doc
-  );
   
+  const doc = useMemo(() => new Doc(), [roomId]);
+  const wsProvider = useMemo(
+    () =>
+      { 
+        const wsp = new WebsocketProvider("ws://localhost:1234", roomId, doc)
+        console.log(wsp);
+        return wsp;
+      },
+    [roomId, doc]
+  );
+
   useEditor((root) => {
     const editorInstance = new Crepe({
       root,
       defaultValue: "",
     });
-
     editorInstance.editor.use(collab);
     setCrepe(editorInstance);
     return editorInstance;
-  }, []);
+  }, [roomId, wsProvider, doc]);
 
   useEffect(() => {
     if (!crepe) return;
-
     const setup = () => {
       if (crepe.editor.status === "Created") {
         crepe.editor.action((ctx) => {
@@ -40,7 +42,6 @@ export const MarkdownEditor: FC = () => {
         });
       }
     };
-
     setup();
   }, [crepe]); 
 
