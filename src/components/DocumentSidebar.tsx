@@ -7,10 +7,9 @@ import {
   Search,
   MoreVertical,
   Clock,
-  Star
+  Star,
 } from "lucide-react";
-import { useState } from "react";
-import { create, readTextFile, BaseDirectory } from "@tauri-apps/plugin-fs";
+import { useState, useEffect } from "react";
 
 interface Document {
   id: string;
@@ -19,47 +18,60 @@ interface Document {
   starred: boolean;
 }
 
-export function DocumentSidebar({ setFileContent }: { setFileContent: (content: string) => void }) {
+export function DocumentSidebar({
+  setRoom,
+}: {
+  setRoom: (room: string) => void;
+}) {
   const [documents, setDocuments] = useState<Document[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const createDoc = async () => {
-    // Logic to create a new document
-    // This could be a modal or redirect to a new document page
-    let newDocTitle = `New Document ${documents.length + 1}`;
-    setDocuments([
-      ...documents,
-      {
-        id: String(documents.length + 1),
-        title: newDocTitle,
-        lastModified: new Date().toLocaleString(),
-        starred: false
+  // Fetch documents from API
+  useEffect(() => {
+    const fetchDocs = async () => {
+      try {
+        const res = await fetch("/api/active-docs");
+        if (!res.ok) throw new Error("Failed to fetch documents");
+
+        const data = await res.json(); // { rooms: [...] }
+        const docs: Document[] = data.rooms.map((room: string, i: number) => ({
+          id: String(i + 1),
+          title: room,
+          lastModified: new Date().toLocaleString(), // 🔹 Server doesn’t send timestamp, so use now
+          starred: false,
+        }));
+
+        setDocuments(docs);
+      } catch (err) {
+        console.error("Error fetching documents:", err);
+      } finally {
+        setLoading(false);
       }
-    ]);
+    };
 
-    const file = await create(
-      `${newDocTitle}.md`,
-      {
-        baseDir: BaseDirectory.AppData
-      }
-    );
-    await file.write(new TextEncoder().encode('Hello world 2.0'));
-    await file.close();
+    fetchDocs();
+  }, []);
 
-    console.log("Create new document");
+  const createDoc = () => {
+    let newDocTitle = `New_Document_${documents.length + 1}`;
+    const newDoc: Document = {
+      id: String(documents.length + 1),
+      title: newDocTitle,
+      lastModified: new Date().toLocaleString(),
+      starred: false,
+    };
+
+    setDocuments((prev) => [...prev, newDoc]);
+    console.log("Created new document", newDocTitle);
   };
 
-  const openDoc = async (doc: Document) => {
-    const file = await readTextFile(`${doc.title}.md`, {
-      baseDir: BaseDirectory.AppData,
-    });
-
-    setFileContent(file);
-    console.log(`Open document: ${doc.title}`, file);
-
+  const openDoc = (doc: Document) => {
+    setRoom(doc.title);
+    console.log(`Open document: ${doc.title}`);
   };
 
   return (
-    <div className="w-80 h-full bg-editor-sidebar border-r border-border flex flex-col">
+    <div className="h-full w-full bg-editor-sidebar border-r border-border flex flex-col">
       {/* Header */}
       <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between mb-4">
@@ -72,21 +84,22 @@ export function DocumentSidebar({ setFileContent }: { setFileContent: (content: 
         {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Search documents..."
-            className="pl-9 h-9"
-          />
+          <Input placeholder="Search documents..." className="pl-9 h-9" />
         </div>
       </div>
 
       {/* Documents list */}
       <div className="flex-1 overflow-y-auto p-4 space-y-2">
-        {documents.map((doc) => (
-          <button onClick={() => openDoc(doc)} className="w-full" key={doc.id}>
+        {loading ? (
+          <p className="text-sm text-muted-foreground">Loading documents...</p>
+        ) : documents.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No documents found</p>
+        ) : (
+          documents.map((doc) => (
             <Card
               key={doc.id}
               className="doc-card p-3 cursor-pointer hover:bg-accent/50 transition-colors"
-
+              onClick={() => openDoc(doc)}
             >
               <div className="flex items-start gap-3">
                 <div className="mt-1">
@@ -102,7 +115,11 @@ export function DocumentSidebar({ setFileContent }: { setFileContent: (content: 
                       {doc.starred && (
                         <Star className="w-3 h-3 text-primary fill-current" />
                       )}
-                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0"
+                      >
                         <MoreVertical className="w-3 h-3" />
                       </Button>
                     </div>
@@ -117,13 +134,18 @@ export function DocumentSidebar({ setFileContent }: { setFileContent: (content: 
                 </div>
               </div>
             </Card>
-          </button>
-        ))}
+          ))
+        )}
       </div>
 
       {/* Footer actions */}
       <div className="p-4 border-t border-border">
-        <Button variant="outline" className="w-full" size="sm">
+        <Button
+          variant="outline"
+          className="w-full"
+          size="sm"
+          onClick={createDoc}
+        >
           <Plus className="w-4 h-4 mr-2" />
           New Document
         </Button>

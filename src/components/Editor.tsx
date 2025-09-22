@@ -1,11 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { MarkdownEditor } from "./MarkdownEditor";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
 
-export function Editor() {
+export function Editor({ room }: { room: string | null }) {
   const [isEditing, setIsEditing] = useState(false);
-  const [room, setRoom] = useState("hwlloww");
   const editorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -25,27 +22,22 @@ export function Editor() {
   }, []);
 
   return (
-    <div className="flex-1 flex justify-center p-8 organic-bg">
-      <div className="w-full max-w-4xl">
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          const newRoom = new FormData(e.currentTarget).get("room") as string;
-          if (newRoom.trim()) setRoom(newRoom.trim());
-        }}
-        className="flex items-center mb-4"
-      >
-        <Input name="room" placeholder="Enter Room ID" defaultValue={room} />
-        <Button type="submit" className="mx-4">Change Room</Button>
-      </form>
+    <div className="flex-1 flex justify-center p-4 md:p-8 overflow-auto">
+      <div className="w-full max-w-4xl h-full">
         <div
           ref={editorRef}
           tabIndex={0}
-          className={`editor-content min-h-[700px] p-12 rounded-xl ${
+          className={`editor-content h-full min-h-[500px] md:min-h-[700px] p-6 md:p-12 rounded-xl bg-card ${
             isEditing ? "ring-2 ring-primary/20" : ""
           }`}
         >
-          <MarkdownEditor roomId={room} />
+          {room ? (
+            <MarkdownEditor roomId={room} />
+          ) : (
+            <p className="text-muted-foreground">
+              Select a document from the sidebar to start editing
+            </p>
+          )}
         </div>
       </div>
     </div>

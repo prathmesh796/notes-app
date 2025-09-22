@@ -1,7 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-// @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;
 
 // https://vitejs.dev/config/
@@ -27,6 +26,12 @@ export default defineConfig(async () => ({
     watch: {
       // 3. tell vite to ignore watching `src-tauri`
       ignored: ["**/src-tauri/**"],
+    },
+    proxy: {
+      "/api": {
+        target: "http://ec2-13-62-104-125.eu-north-1.compute.amazonaws.com:1234", // your backend
+        changeOrigin: true,
+      },
     },
   },
 }));

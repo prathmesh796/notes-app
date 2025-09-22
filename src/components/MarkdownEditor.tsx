@@ -5,26 +5,33 @@ import { Doc } from "yjs";
 import { WebsocketProvider } from "y-websocket";
 import "@milkdown/crepe/theme/common/style.css";
 import "@milkdown/crepe/theme/frame.css";
-import React, { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export const MarkdownEditor = ({ roomId }: { roomId: string }) => {
-  const [crepe, setCrepe] = React.useState<Crepe | null>(null);
+  const [crepe, setCrepe] = useState<Crepe | null>(null);
+  const [status, setStatus] = useState<"Connecting" | "Connected" | "Disconnected">("Connecting");
 
   // Create Yjs Doc + Provider
   const doc = useMemo(() => new Doc(), [roomId]);
   const wsProvider = useMemo(() => {
-    const wsp = new WebsocketProvider("ws://localhost:1234", roomId, doc);
+    console.log("Connecting to WebSocket with room:", roomId);
+    const wsp = new WebsocketProvider(
+      "ws://ec2-13-62-104-125.eu-north-1.compute.amazonaws.com:1234",
+      roomId,
+      doc
+    );
+
     wsp.on("status", (event) => {
       console.log("[CLIENT] WS status:", event.status);
+      if (event.status === "connected") setStatus("Connected");
+      else setStatus("Disconnected");
     });
+
     return wsp;
   }, [roomId, doc]);
 
   // Attach a debug observer to the Y.Doc
   useEffect(() => {
-    doc.on('update', ()=>{
-      console.log("hii");
-    })
     const ytext = doc.getText("content");
     const observer = (event: any) => {
       console.log("[CLIENT] Local Y.Text changed:", ytext.toString(), event);
@@ -63,5 +70,20 @@ export const MarkdownEditor = ({ roomId }: { roomId: string }) => {
     }
   }, [crepe, doc, wsProvider]);
 
-  return <Milkdown />;
+  return (
+    <div>
+      <div style={{ marginBottom: "6px", fontSize: "14px" }}>
+        Status:{" "}
+        <span
+          style={{
+            color: status === "Connected" ? "green" : status === "Disconnected" ? "red" : "orange",
+            fontWeight: "bold",
+          }}
+        >
+          {status}
+        </span>
+      </div>
+      <Milkdown />
+    </div>
+  );
 };

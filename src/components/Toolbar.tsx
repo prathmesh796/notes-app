@@ -1,5 +1,8 @@
+import { editorState, editorStateCtx } from "@milkdown/core";
 import { Button } from "../components/ui/button";
 import { Separator } from "../components/ui/separator";
+import { useInstance } from "@milkdown/react";
+import { nodesCtx, marksCtx } from "@milkdown/core";
 import { 
   Bold, 
   Italic, 
@@ -18,6 +21,15 @@ import { useState } from "react";
 
 export function Toolbar() {
   const [activeFormats, setActiveFormats] = useState<Set<string>>(new Set());
+  const [isLoading, getInstance] = useInstance();
+  const editor = !isLoading ? getInstance() : null;
+
+  let select = editor?.action(ctx => {
+    let state = ctx.get(editorStateCtx);
+    return state.selection
+  })
+  let marksarr = marksCtx;
+  console.log(marksarr);
 
   const toggleFormat = (format: string) => {
     const newFormats = new Set(activeFormats);
@@ -35,10 +47,10 @@ export function Toolbar() {
     <div className="editor-toolbar h-12 px-4 flex items-center gap-1">
       {/* History */}
       <Button variant="ghost" size="sm" className="btn-editor">
-        <Undo className="w-4 h-4" />
+        {/* <Undo className="w-4 h-4" /> */}
       </Button>
       <Button variant="ghost" size="sm" className="btn-editor">
-        <Redo className="w-4 h-4" />
+        {/* <Redo className="w-4 h-4" /> */}
       </Button>
       
       <Separator orientation="vertical" className="h-6 mx-2" />
